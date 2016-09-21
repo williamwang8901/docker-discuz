@@ -4,7 +4,7 @@
  *      [Discuz!] (C)2001-2099 Comsenz Inc.
  *      This is NOT a freeware, use is subject to license terms
  *
- *      $Id: forum_viewthread.php 34125 2013-10-15 09:24:41Z jeffjzhang $
+ *      $Id: forum_viewthread.php 35494 2015-08-06 09:31:59Z nemohou $
  */
 
 if(!defined('IN_DISCUZ')) {
@@ -18,6 +18,9 @@ require_once libfile('function/post');
 $thread = & $_G['forum_thread'];
 $forum = & $_G['forum'];
 
+if(!empty($_GET['checkrush']) && preg_match('/[^0-9_]/', $_GET['checkrush'])) {
+	$_GET['checkrush'] = '';
+}
 if(!$_G['forum_thread'] || !$_G['forum']) {
 	showmessage('thread_nonexistence');
 }
@@ -581,6 +584,9 @@ if(!$maxposition && empty($postarr)) {
 		} else {
 			$post = C::t('forum_post')->fetch('tid:'.$_G['tid'], $_GET['viewpid']);
 		}
+		if($post['tid'] != $_G['tid']) {
+			$post = array();
+		}
 
 		if($post) {
 			if($visibleallflag || (!$visibleallflag && !$post['invisible'])) {
@@ -657,7 +663,7 @@ foreach($postarr as $post) {
 				continue;
 			}
 			$_G['forum_firstpid'] = $post['pid'];
-			if(IS_ROBOT || $_G['adminid'] == 1) $summary = str_replace(array("\r", "\n"), '', messagecutstr(strip_tags($post['message']), 160));
+			if(!$_G['forum_thread']['price'] && (IS_ROBOT || $_G['adminid'] == 1)) $summary = str_replace(array("\r", "\n"), '', messagecutstr(strip_tags($post['message']), 160));
 			$tagarray_all = $posttag_array = array();
 			$tagarray_all = explode("\t", $post['tags']);
 			if($tagarray_all) {
@@ -1588,6 +1594,8 @@ function parsebegin($linkaddr, $imgflashurl, $w = 0, $h = 0, $type = 0, $s = 0) 
 	preg_match("/((https?){1}:\/\/|www\.)[^\[\"']+/i", $imgflashurl, $matches);
 	$imgflashurl = $matches[0];
 	$fileext = fileext($imgflashurl);
+	preg_match("/((https?){1}:\/\/|www\.)[^\[\"']+/i", $linkaddr, $matches);
+	$linkaddr = $matches[0];
 	$randomid = 'swf_'.random(3);
 	$w = ($w >=400 && $w <=1024) ? $w : 900;
 	$h = ($h >=300 && $h <=640) ? $h : 500;
